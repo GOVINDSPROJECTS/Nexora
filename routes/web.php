@@ -18,6 +18,9 @@ Route::prefix('api/v1')->middleware(['throttle:api'])->group(function () {
 
     Route::get('/public/jobs/{slug}', [\App\Modules\ATS\Controllers\PublicJobController::class, 'show']);
     Route::post('/public/jobs/{slug}/apply', [\App\Modules\ATS\Controllers\PublicJobController::class, 'apply']);
+    Route::get('/public/offers/{token}', [\App\Modules\ATS\Controllers\PublicJobController::class, 'showOffer']);
+    Route::post('/public/offers/{token}/accept', [\App\Modules\ATS\Controllers\PublicJobController::class, 'acceptOffer']);
+    Route::post('/public/offers/{token}/decline', [\App\Modules\ATS\Controllers\PublicJobController::class, 'declineOffer']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [\App\Modules\Auth\Controllers\LoginController::class, 'user']);
@@ -53,12 +56,14 @@ Route::prefix('api/v1')->middleware(['throttle:api'])->group(function () {
         Route::post('/candidates/{id}/notes', [\App\Modules\ATS\Controllers\CandidateController::class, 'addNote']);
         Route::get('/candidates/{id}/activities', [\App\Modules\ATS\Controllers\CandidateController::class, 'activities']);
         Route::post('/candidates/{id}/resume', [\App\Modules\ATS\Controllers\CandidateController::class, 'uploadResume']);
+        Route::post('/candidates/{id}/generate-offer', [\App\Modules\ATS\Controllers\CandidateController::class, 'generateOffer']);
         Route::apiResource('candidates', \App\Modules\ATS\Controllers\CandidateController::class);
 
         Route::get('/interviews', [\App\Modules\ATS\Controllers\InterviewController::class, 'index']);
         Route::post('/interviews', [\App\Modules\ATS\Controllers\InterviewController::class, 'store']);
         Route::put('/interviews/{id}', [\App\Modules\ATS\Controllers\InterviewController::class, 'update']);
         Route::post('/interviews/{id}/feedback', [\App\Modules\ATS\Controllers\InterviewController::class, 'addFeedback']);
+        Route::post('/interviews/{id}/decision', [\App\Modules\ATS\Controllers\InterviewController::class, 'recordDecision']);
 
         Route::get('/jobs', [\App\Modules\ATS\Controllers\JobController::class, 'index']);
         Route::post('/jobs', [\App\Modules\ATS\Controllers\JobController::class, 'store']);

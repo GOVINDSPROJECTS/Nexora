@@ -18,6 +18,7 @@ import SettingsPage from '@/app/pages/Settings/SettingsPage';
 import CreateJobPage from '@/app/pages/ATS/CreateJobPage';
 import JobDetailPage from '@/app/pages/ATS/JobDetailPage';
 import PublicJobApplyPage from '@/app/pages/ATS/PublicJobApplyPage';
+import PublicOfferPage from '@/app/pages/ATS/PublicOfferPage';
 
 // Protected Route Component
 const ProtectedRoute = () => {
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
         element: <RootLayout />,
         children: [
             { path: 'apply/:slug', element: <PublicJobApplyPage /> },
+            { path: 'offers/:token', element: <PublicOfferPage /> },
             // Public Routes
             {
                 element: <PublicRoute />,

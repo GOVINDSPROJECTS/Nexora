@@ -51,9 +51,12 @@ class JobService
     public function generateSlug(string $title): string
     {
         $base = Str::slug($title);
-        do {
-            $slug = $base . '-' . Str::lower(Str::random(8));
-        } while (JobPosting::withoutGlobalScopes()->where('public_slug', $slug)->exists());
+        $slug = $base;
+        $counter = 1;
+        while (JobPosting::withoutGlobalScopes()->where('public_slug', $slug)->exists()) {
+            $slug = $base . '-' . $counter;
+            $counter++;
+        }
 
         return $slug;
     }

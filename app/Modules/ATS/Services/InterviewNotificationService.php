@@ -29,12 +29,16 @@ class InterviewNotificationService
             );
         }
 
+        $locationDetails = $interview->location_type === 'online'
+            ? 'Meet: ' . ($interview->meeting_link ?? 'TBD')
+            : 'Address: ' . ($interview->location_address ?? 'TBD');
+
         $message = sprintf(
-            'Interview scheduled: %s — %s at %s. Meet: %s',
+            'Interview scheduled: %s — %s at %s. %s',
             $interview->candidate?->name,
             $interview->stage,
             $interview->scheduled_at->format('M j, Y H:i'),
-            $interview->meeting_link ?? 'TBD'
+            $locationDetails
         );
 
         $this->integrationService->notifyChat('hiring', $message);

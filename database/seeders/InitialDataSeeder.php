@@ -9,6 +9,7 @@ use App\Modules\Leave\Models\LeaveType;
 use App\Modules\ATS\Models\JobPosting;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Modules\Auth\Constants\Permissions;
 
 class InitialDataSeeder extends Seeder
@@ -32,13 +33,28 @@ class InitialDataSeeder extends Seeder
             'timezone' => 'UTC',
         ]);
 
-        // 2. Create Users for each role
+        // 2. Ensure Departments and Designations exist for this tenant
+        $departmentId = DB::table('departments')->insertGetId([
+            'tenant_id'  => $tenant->id,
+            'name'       => 'Engineering',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $designationId = DB::table('designations')->insertGetId([
+            'tenant_id'     => $tenant->id,
+            'name'          => 'Senior Developer',
+            'created_at'    => now(),
+            'updated_at'    => now(),
+        ]);
+
+        // 3. Create Users for each role
         // Tenant Admin
         $admin = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'System Admin',
             'email' => 'admin@nexora.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Pass@123'),
             'status' => 'active',
         ]);
         $admin->assignRole($adminRole);
@@ -48,7 +64,7 @@ class InitialDataSeeder extends Seeder
             'tenant_id' => $tenant->id,
             'name' => 'Sarah HR',
             'email' => 'hr@nexora.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Pass@123'),
             'status' => 'active',
         ]);
         $hr->assignRole($hrRole);
@@ -58,7 +74,7 @@ class InitialDataSeeder extends Seeder
             'tenant_id' => $tenant->id,
             'name' => 'Robert Manager',
             'email' => 'manager@nexora.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Pass@123'),
             'status' => 'active',
         ]);
         $managerUser->assignRole($managerRole);
@@ -68,12 +84,12 @@ class InitialDataSeeder extends Seeder
             'tenant_id' => $tenant->id,
             'name' => 'John Employee',
             'email' => 'employee@nexora.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Pass@123'),
             'status' => 'active',
         ]);
         $empUser->assignRole($employeeRole);
 
-        // 3. Create Leave Types
+        // 4. Create Leave Types
         $leaveTypes = [
             ['name' => 'Sick Leave', 'days_per_year' => 12],
             ['name' => 'Annual Leave', 'days_per_year' => 20],
@@ -84,15 +100,15 @@ class InitialDataSeeder extends Seeder
             LeaveType::create(array_merge($type, ['tenant_id' => $tenant->id]));
         }
 
-        // 4. Create Sample Employees
+        // 5. Create Sample Employees using dynamic IDs
         $employees = [
             [
                 'user_id' => $empUser->id,
                 'name' => 'John Employee',
                 'email' => 'employee@nexora.com',
                 'employee_id' => 'NX-001',
-                'department' => 'Engineering',
-                'designation' => 'Senior Developer',
+                'department_id' => $departmentId,
+                'designation_id' => $designationId,
                 'status' => 'active',
                 'employment_type' => 'full-time',
             ],
@@ -101,8 +117,8 @@ class InitialDataSeeder extends Seeder
                 'name' => 'Sarah HR',
                 'email' => 'hr@nexora.com',
                 'employee_id' => 'NX-002',
-                'department' => 'HR',
-                'designation' => 'HR Manager',
+                'department_id' => $departmentId,
+                'designation_id' => $designationId,
                 'status' => 'active',
                 'employment_type' => 'full-time',
             ],
@@ -111,8 +127,8 @@ class InitialDataSeeder extends Seeder
                 'name' => 'Robert Manager',
                 'email' => 'manager@nexora.com',
                 'employee_id' => 'NX-003',
-                'department' => 'Engineering',
-                'designation' => 'Tech Lead',
+                'department_id' => $departmentId,
+                'designation_id' => $designationId,
                 'status' => 'active',
                 'employment_type' => 'full-time',
             ],
@@ -122,7 +138,7 @@ class InitialDataSeeder extends Seeder
             Employee::create(array_merge($emp, ['tenant_id' => $tenant->id]));
         }
 
-        // 5. Create Sample Job Postings
+        // 6. Create Sample Job Postings
         $jobs = [
             [
                 'title' => 'Frontend Engineer (React)',

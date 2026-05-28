@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/app/store/authStore';
 import api from '@/app/api/axios';
 import { Bell, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,12 +20,33 @@ const priorityColors: Record<string, string> = {
 
 export default function NotificationCenter() {
     const queryClient = useQueryClient();
+    const { user } = useAuthStore();
 
     const { data } = useQuery({
         queryKey: ['notifications'],
         queryFn: async () => (await api.get('/notifications', { params: { per_page: 10 } })).data.data,
         refetchInterval: 60000,
     });
+
+    useEffect(() => {
+        if (!user || !user.tenant || !window.Echo) return;
+
+        const channelName = `tenant.${user.tenant.id}.user.${user.id}`;
+        
+        window.Echo.private(channelName)
+            .listen('.notification.sent', (e: any) => {
+                queryClient.invalidateQueries({ queryKey: ['notifications'] });
+                import('sonner').then(({ toast }) => {
+                    toast.info(e.title, {
+                        description: e.message,
+                    });
+                });
+            });
+
+        return () => {
+            window.Echo.leave(channelName);
+        };
+    }, [user, queryClient]);
 
     const markRead = useMutation({
         mutationFn: (id: string) => api.post(`/notifications/${id}/read`),

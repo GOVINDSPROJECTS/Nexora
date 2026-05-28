@@ -87,9 +87,69 @@ class CandidateController extends BaseController
             if ($validated['current_stage'] === 'Selected') {
                 event(new CandidateSelected($candidate));
             }
+
+            if ($validated['current_stage'] === 'Rejected') {
+                $mailService = app(\App\Modules\Notification\Services\MailService::class);
+                $mailService->send($candidate->email, new \App\Modules\ATS\Mail\RejectionMail($candidate), $candidate->name);
+            }
         }
 
         return $this->success(new CandidateResource($candidate->load('jobPosting', 'interviews')), 'Candidate updated successfully');
+    }
+
+    public function generateOffer(Request $request, $id): JsonResponse
+    {
+        $candidate = Candidate::findOrFail($id);
+
+        $validated = $request->validate([
+            'manager_id' => 'nullable|exists:employees,id',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
+            'joining_date' => 'required|date',
+            'employment_type' => 'required|string',
+            'offered_salary' => 'required|numeric|min:0',
+        ]);
+
+        $offerToken = \Illuminate\Support\Str::random(40);
+
+        $candidate->update(array_merge($validated, [
+            'offer_token' => $offerToken,
+            'offer_sent_at' => now(),
+            'current_stage' => 'Selected',
+        ]));
+
+        $offerUrl = url("/offers/{$offerToken}");
+
+        $mailService = app(\App\Modules\Notification\Services\MailService::class);
+        $mailService->send($candidate->email, new \App\Modules\ATS\Mail\OfferLetterMail($candidate, $offerUrl), $candidate->name);
+
+        if ($candidate->manager && $candidate->manager->user) {
+            $notificationService = app(\App\Modules\Notification\Services\NotificationService::class);
+            $designationName = $candidate->designation?->name ?? 'Employee';
+            $notificationService->send(
+                $candidate->manager->user,
+                'offer_sent',
+                'Employment Offer Sent',
+                "An employment offer has been sent to {$candidate->name} for the role of {$designationName} under your management.",
+                'ats',
+                'normal',
+                ['candidate_id' => $candidate->id]
+            );
+        }
+
+        $this->activityService->log(
+            $candidate,
+            'offer_sent',
+            "Offer generated and sent. Joining Date: {$candidate->joining_date}, Salary: {$candidate->offered_salary}",
+            ['manager_id' => $candidate->manager_id]
+        );
+
+        event(new CandidateSelected($candidate));
+
+        return $this->success(
+            new CandidateResource($candidate->load(['jobPosting', 'manager', 'department', 'designation'])),
+            'Employment offer letter generated and sent successfully.'
+        );
     }
 
     public function uploadResume(Request $request, $id): JsonResponse

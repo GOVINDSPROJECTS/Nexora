@@ -22,7 +22,13 @@ export default function JobDetailPage() {
     const queryClient = useQueryClient();
     const [scheduleOpen, setScheduleOpen] = useState(false);
     const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
-    const [interview, setInterview] = useState({ stage: 'Screening', scheduled_at: '' });
+    const [interview, setInterview] = useState({
+        stage: 'Screening',
+        scheduled_at: '',
+        location_type: 'online',
+        meeting_link: '',
+        location_address: ''
+    });
 
     const { data: job, isLoading } = useQuery({
         queryKey: ['job', id],
@@ -45,9 +51,12 @@ export default function JobDetailPage() {
                 job_posting_id: job.id,
                 stage: interview.stage,
                 scheduled_at: interview.scheduled_at,
+                location_type: interview.location_type,
+                meeting_link: interview.location_type === 'online' ? interview.meeting_link : null,
+                location_address: interview.location_type === 'offline' ? interview.location_address : null,
             }),
         onSuccess: () => {
-            toast.success('Interview scheduled — candidate emailed with meeting link');
+            toast.success('Interview scheduled — candidate emailed with details');
             setScheduleOpen(false);
             queryClient.invalidateQueries({ queryKey: ['job-candidates', id] });
         },
@@ -166,8 +175,39 @@ export default function JobDetailPage() {
                                 onChange={(e) => setInterview({ ...interview, scheduled_at: e.target.value })}
                             />
                         </div>
+                        <div className="space-y-2">
+                            <Label>Location Type</Label>
+                            <Select value={interview.location_type} onValueChange={(v) => setInterview({ ...interview, location_type: v })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="online">Online (Zoom, Meet, Teams)</SelectItem>
+                                    <SelectItem value="offline">Offline (In-person / Address)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {interview.location_type === 'online' ? (
+                            <div className="space-y-2">
+                                <Label>Meeting Link</Label>
+                                <Input
+                                    type="text"
+                                    placeholder="Paste Zoom, Meet, or Teams link"
+                                    value={interview.meeting_link}
+                                    onChange={(e) => setInterview({ ...interview, meeting_link: e.target.value })}
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Label>Interview Address</Label>
+                                <Input
+                                    type="text"
+                                    placeholder="Enter physical office address"
+                                    value={interview.location_address}
+                                    onChange={(e) => setInterview({ ...interview, location_address: e.target.value })}
+                                />
+                            </div>
+                        )}
                         <p className="text-xs text-muted-foreground">
-                            A Google Meet link will be generated and emailed to the candidate. HR is notified via email and Zoho Cliq.
+                            Candidate will be emailed with the details. HR is notified via email and Zoho Cliq.
                         </p>
                         <Button className="w-full" onClick={() => scheduleInterview.mutate()} disabled={scheduleInterview.isPending}>
                             Schedule & send invite

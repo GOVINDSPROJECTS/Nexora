@@ -21,6 +21,8 @@ class Interview extends Model
         'feedback',
         'rating',
         'meeting_link',
+        'location_type',
+        'location_address',
     ];
 
     protected $casts = [
