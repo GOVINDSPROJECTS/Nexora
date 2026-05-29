@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Laravel + React Starter Kit
 
 ## Introduction
@@ -27,4 +27,4 @@ The Laravel + React starter kit is open-sourced software licensed under the MIT 
 =======
 # Nexora
 EMS
->>>>>>> cf6d2619c4dd92b9ae20314935c653ecd479d020
+cf6d2619c4dd92b9ae20314935c653ecd479d020
